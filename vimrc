@@ -53,7 +53,7 @@ set expandtab
 set tabstop=4
 set shiftwidth=4
 
-let mapleader="."
+let mapleader=","
 
 "" Tlist
 nmap <Leader>lt :Tlist<CR>
@@ -91,7 +91,7 @@ fu s:SetProjDir()
     if !exists('g:proj_dir') | let g:proj_dir = "." | endif
 endf
 
-nmap fk :exec "Ack -m1 --lua <C-R><C-W> ".g:proj_dir<CR>
+nmap <Leader>k :exec "Ack -m1 --lua <C-R><C-W> ".g:proj_dir<CR>
 "set tags
 fu s:SetTags()
     if exists('s:tags_setted') | return | endif
@@ -114,19 +114,14 @@ augroup vimrc
     au BufRead * call s:SetTags()
 augroup END
 
-nmap <C-I> :tj /\C^\(\i\+[.:]\)\?<C-R><C-W>\s*$<CR>
+nn <Leader>i :tj /\C^\(\i\+[.:]\)\?<C-R><C-W>\s*$<CR>
 
 " search .lua
-fu! s:FindFile()
-    let pt = printf('^local\s\+%s\s\+=\s\+require', expand("<cword>"))
-    let ptnr = search(pt, 'bn')
-    if !ptnr | retu | en
-    let lib = matchstr(getline(ptnr), '"[^"]\+"')
-    if !strlen(lib) | retu | en
-    let lib_pt = '/'. tr(lib[1:-2], '.', '/') . '.lua'
+fu! s:FindFile(lib)
+    let lib_pt = printf('/%s.lua', tr(a:lib, '.', '/'))
     let lib_files = systemlist('locate '.lib_pt)
     if !len(lib_files)
-        let lib_pt = 'luaopen_'.tr(lib[1:-2], '.', '_')
+        let lib_pt = 'luaopen_'.tr(a:lib, '.', '_')
         let lib_files = systemlist(printf("ack -l -1 --cc %s %s", lib_pt, g:proj_dir))
     endif
     if len(lib_files) == 1
@@ -138,10 +133,19 @@ fu! s:FindFile()
         let lib_files[i] = {'filename':line}
         let i = i + 1
     endfor
-    "call setloclist(0, lib_files, 'r')
     call setqflist(lib_files, 'r')
     botright copen 3
     exec "redraw!"
 endf
-command! -nargs=0 FindFile call s:FindFile()
-nmap ff :silent! FindFile<CR>
+
+fu! s:FindFileByKey()
+    let pt = printf('^local\s\+%s\s\+=\s\+require', expand("<cword>"))
+    let ptnr = search(pt, 'bn')
+    if !ptnr | retu | en
+    let lib = matchstr(getline(ptnr), '"[^"]\+"')
+    call s:FindFile(lib[1:-2])
+endf
+command! -nargs=0 FFBK call s:FindFileByKey()
+command! -nargs=1 FindFile call s:FindFile(<f-args>)
+nmap <Leader>f :FFBK<CR>
+vnoremap <Leader>vf y:FindFile <C-R>"<CR>
