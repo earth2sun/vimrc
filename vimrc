@@ -22,7 +22,7 @@ Plugin 'tpope/vim-fugitive'
 Plugin 'taglist.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'nerdtree-ack'
-Plugin 'ack.vim'
+Plugin 'mileszs/ack.vim'
 " Git plugin not hosted on GitHub
 "Plugin 'git://git.wincent.com/command-t.git'
 " git repos on your local machine (i.e. when working on your own plugin)
@@ -92,7 +92,14 @@ fu s:SetProjDir()
     if !exists('g:proj_dir') | let g:proj_dir = "." | endif
 endf
 
-nmap <Leader>k :exec "Ack -m1 --lua <C-R><C-W> ".g:proj_dir<CR>
+fu! g:FindKey(key, all)
+    let @/ = a:key
+    exec printf("Ack! -m1 %s %s %s", a:all?'':'--lua', a:key, g:proj_dir)
+endf
+nmap <Leader>s :call g:FindKey('<C-R><C-W>', 0)<CR>
+nmap <Leader>S :call g:FindKey('<C-R><C-W>', 1)<CR>
+vmap <Leader>vs y:call g:FindKey('<C-R>"', 0)
+vmap <Leader>vS y:call g:FindKey('<C-R>"', 0)
 "set tags
 fu s:SetTags()
     if exists('s:tags_setted') | return | endif
@@ -150,3 +157,5 @@ command! -nargs=0 FFBK call s:FindFileByKey()
 command! -nargs=1 FindFile call s:FindFile(<f-args>)
 nmap <Leader>f :FFBK<CR>
 vnoremap <Leader>vf y:FindFile <C-R>"<CR>
+"close the quickfix window
+map <Leader>x :ccl<CR>
