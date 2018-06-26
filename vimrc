@@ -82,7 +82,8 @@ fu s:SetProjDir()
         for mark in s:marks
             let mark_path = dir_path . mark
             if isdirectory(mark_path)
-                let g:proj_dir = dir_path | break |
+                let g:proj_dir = dir_path
+                break
             endif
         endfor
         if exists('g:proj_dir') | break | endif
@@ -98,8 +99,8 @@ fu! g:FindKey(key, all)
 endf
 nmap <Leader>s :call g:FindKey('<C-R><C-W>', 0)<CR>
 nmap <Leader>S :call g:FindKey('<C-R><C-W>', 1)<CR>
-vmap <Leader>vs y:call g:FindKey('<C-R>"', 0)
-vmap <Leader>vS y:call g:FindKey('<C-R>"', 0)
+vmap <Leader>vs y:call g:FindKey('<C-R>"', 0)<CR>
+vmap <Leader>vS y:call g:FindKey('<C-R>"', 1)<CR>
 "set tags
 fu s:SetTags()
     if exists('s:tags_setted') | return | endif
@@ -110,6 +111,7 @@ fu s:SetTags()
         if filereadable(tags_path)
             let &tags=tags_path
             let s:tags_setted = 1
+            break
         endif
         let dir_path = dir_path[0:-2] "remove the ending '/'
         if !strlen(dir_path) | break | endif
@@ -122,7 +124,6 @@ augroup vimrc
     au BufRead * call s:SetTags()
 augroup END
 
-nn <Leader>i :tj /\C^\(\i\+[.:]\)\?<C-R><C-W>\s*$<CR>
 
 " search .lua
 fu! s:FindFile(lib)
@@ -146,16 +147,28 @@ fu! s:FindFile(lib)
     exec "redraw!"
 endf
 
-fu! s:FindFileByKey()
-    let pt = printf('^local\s\+%s\s\+=\s\+require', expand("<cword>"))
-    let ptnr = search(pt, 'bn')
-    if !ptnr | retu | en
-    let lib = matchstr(getline(ptnr), '"[^"]\+"')
-    call s:FindFile(lib[1:-2])
+fu! s:FindRequire()
+    let lib = matchstr(getline('.'), '[''"].\+[''"]') "use doubled single quotes to stand for single quote
+    if !strlen(lib) | retu | en
+    call s:FindFile(lib)
 endf
-command! -nargs=0 FFBK call s:FindFileByKey()
+
+command! -nargs=0 FindRequire call s:FindRequire()
 command! -nargs=1 FindFile call s:FindFile(<f-args>)
-nmap <Leader>f :FFBK<CR>
+command! Jump2tag exec 'tj /\C^\(\i\+[.:]\)\?'.expand('<cword>').'\s*$'
+
+fu! g:MyJump()
+    let cword = expand('<cword>')
+    let cline = getline('.')
+    let idx = col('.') "
+    if cword =~ '\u\w\+' && match(getline('.'), cword.'\.') >= 0
+        normal gD
+        call s:FindRequire() | return
+    endif
+    Jump2tag
+endf
+nmap <Leader>f :FindRequire<CR>
 vnoremap <Leader>vf y:FindFile <C-R>"<CR>
 "close the quickfix window
 map <Leader>x :ccl<CR>
+nn <Leader>i :call g:MyJump()<CR>
