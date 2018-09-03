@@ -20,9 +20,13 @@ Plugin 'tpope/vim-fugitive'
 " plugin from http://vim-scripts.org/vim/scripts.html
 " Plugin 'L9'
 Plugin 'taglist.vim'
+Plugin 'repeat.vim'
+Plugin 'surround.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'nerdtree-ack'
 Plugin 'mileszs/ack.vim'
+" maintain manually-defined jump stack
+Plugin 'tommcdo/vim-kangaroo'
 " Git plugin not hosted on GitHub
 "Plugin 'git://git.wincent.com/command-t.git'
 " git repos on your local machine (i.e. when working on your own plugin)
@@ -122,6 +126,8 @@ augroup vimrc
     au!
     au BufRead * call s:SetProjDir()
     au BufRead * call s:SetTags()
+    au BufNewFile,BufRead *.yml set ts=2
+    au BufNewFile,BufRead *.yaml set ts=2
 augroup END
 
 
@@ -147,28 +153,34 @@ fu! s:FindFile(lib)
     exec "redraw!"
 endf
 
-fu! s:FindRequire()
-    let lib = matchstr(getline('.'), '[''"].\+[''"]') "use doubled single quotes to stand for single quote
+fu! s:FindRequire(nr)
+    let nr = a:nr ? a:nr : '.'
+    let lib = matchstr(getline(nr), '[''"].\+[''"]') "use double single quotes to stand for single quote
     if !strlen(lib) | retu | en
     call s:FindFile(lib)
 endf
 
-command! -nargs=0 FindRequire call s:FindRequire()
+command! -nargs=0 FindRequire call s:FindRequire(0)
 command! -nargs=1 FindFile call s:FindFile(<f-args>)
 command! Jump2tag exec 'tj /\C^\(\i\+[.:]\)\?'.expand('<cword>').'\s*$'
 
 fu! g:MyJump()
     let cword = expand('<cword>')
     let cline = getline('.')
-    let idx = col('.') "
-    if cword =~ '\u\w\+' && match(getline('.'), cword.'\.') >= 0
-        normal gD
-        call s:FindRequire() | return
+    if cword =~ '\u\w\+' && match(cline, cword.'\.') >= 0
+        let nr = search('local\s\+'.cword, 'bn')
+        call s:FindRequire(nr) | return
     endif
     Jump2tag
 endf
 nmap <Leader>f :FindRequire<CR>
 vnoremap <Leader>vf y:FindFile <C-R>"<CR>
 "close the quickfix window
-map <Leader>x :ccl<CR>
+nn <Leader>x :ccl<CR>
+nn <Leader>o :copen<CR>
 nn <Leader>i :call g:MyJump()<CR>
+no <Leader>sc :s/^/#/<CR>
+no <Leader>sC :s/^#//<CR>
+
+set list
+set lcs=tab:>-,trail:-
