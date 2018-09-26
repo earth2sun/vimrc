@@ -101,7 +101,8 @@ fu! g:FindKey(key, all)
     let @/ = a:key
     exec printf("Ack! -m1 %s %s %s", a:all?'':'--lua', a:key, g:proj_dir)
 endf
-nmap <Leader>s :call g:FindKey('<C-R><C-W>', 0)<CR>
+nmap <Leader>s :Ack! -m1 <C-R><C-W> --lua
+"nmap <Leader>s :call g:FindKey('<C-R><C-W>', 0)<CR>
 nmap <Leader>S :call g:FindKey('<C-R><C-W>', 1)<CR>
 vmap <Leader>vs y:call g:FindKey('<C-R>"', 0)<CR>
 vmap <Leader>vS y:call g:FindKey('<C-R>"', 1)<CR>
@@ -149,8 +150,7 @@ fu! s:FindFile(lib)
         let i = i + 1
     endfor
     call setqflist(lib_files, 'r')
-    botright copen 3
-    exec "redraw!"
+    botright copen 5
 endf
 
 fu! s:FindRequire(nr)
@@ -177,7 +177,7 @@ nmap <Leader>f :FindRequire<CR>
 vnoremap <Leader>vf y:FindFile <C-R>"<CR>
 "close the quickfix window
 nn <Leader>x :ccl<CR>
-nn <Leader>o :copen<CR>
+nn <Leader>o :bo copen 5<CR>
 nn <Leader>i :call g:MyJump()<CR>
 no <Leader>sc :s/^/#/<CR>
 no <Leader>sC :s/^#//<CR>
