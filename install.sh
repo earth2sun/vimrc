@@ -3,8 +3,8 @@
 init_vimrc() {
     Vundle=~/.vim/bundle/Vundle.vim
     test -d $Vundle || git clone https://github.com/VundleVim/Vundle.vim.git $Vundle
-    line="source $(pwd)/vimrc"
-    grep -q "$line" ~/.vimrc || echo "$line" >> ~/.vimrc
+    [ -e $vimrc ] && grep -q "$line" ~/.vimrc && exit 0
+    echo "$line" >> ~/.vimrc
     vim +PluginInstall +qall
 }
 
