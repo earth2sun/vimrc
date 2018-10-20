@@ -160,9 +160,12 @@ fu! s:FindRequire(nr)
     call s:FindFile(lib)
 endf
 
+nmap <Leader>e :e <C-R>=expand('%:h')<CR>/
+
 command! -nargs=0 FindRequire call s:FindRequire(0)
 command! -nargs=1 FindFile call s:FindFile(<f-args>)
 command! Jump2tag exec 'tj /\C^\(\i\+[.:]\)\?'.expand('<cword>').'\s*$'
+
 
 fu! g:MyJump()
     let cword = expand('<cword>')
