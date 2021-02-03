@@ -176,14 +176,36 @@ fu! g:MyJump()
     endif
     Jump2tag
 endf
+
+let g:ft2comment = #{
+\   lua: '--',
+\   vim: '"',
+\   c:  '//',
+\   cpp: '//'
+\}
+
+fu! g:ToggleComment() range
+    let comment = '#'
+    if g:ft2comment->has_key(&filetype)
+        let comment = g:ft2comment[&filetype]
+    endif
+    if match(getline('.'), '^'.comment) =~ -1
+        let cmd = printf('%d,%ds@^@%s@', a:firstline, a:lastline, comment)
+    else
+        let cmd = printf('%d,%ds@^%s@@', a:firstline, a:lastline, comment)
+    endif
+    exec cmd
+endf
+no <Leader>c :call g:ToggleComment()<CR>
+
+
 nmap <Leader>f :FindRequire<CR>
 vnoremap <Leader>vf y:FindFile <C-R>"<CR>
 "close the quickfix window
 nn <Leader>x :ccl<CR>
 nn <Leader>o :bo copen 5<CR>
 nn <Leader>i :call g:MyJump()<CR>
-no <Leader>sc :s/^/#/<CR>
-no <Leader>sC :s/^#//<CR>
+nn <Leader>d :cd <C-R>=expand('%:h')<CR><CR>
 
 set list
 set lcs=tab:>-,trail:-
